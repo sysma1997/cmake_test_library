@@ -1,6 +1,9 @@
 #include "./libs/sysma/sysma.h"
 #include "./src/window/window.h"
 
+#include "./src/screens/login/login.h"
+#include "./src/screens/register/register.h"
+
 int main()
 {
     sysma::storage = sysma::Database();
@@ -9,21 +12,15 @@ int main()
     window.init("test");
     UI ui{window.window};
 
-    char username[60]{""};
-    char password[60]{""};
-
     while (window.isClose())
     {
         window.newFrame();
         ui.newFrame();
 
-        ImGui::SetNextWindowPos(ImVec2(window.width / 2, window.height / 2));
-        ImGui::Begin("login");
-        ImGui::Text("Username:");
-        ImGui::InputText("##username", username, IM_ARRAYSIZE(username));
-        ImGui::Text("Password:");
-        ImGui::InputText("##password", password, IM_ARRAYSIZE(password));
-        ImGui::End();
+        if (Login::show)
+            Login::Init(window, &sysma::storage);
+        if (Register::show)
+            Register::Init(window, &sysma::storage);
 
         ui.renderFrame();
         window.renderFrame();

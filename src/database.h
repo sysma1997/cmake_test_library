@@ -6,12 +6,13 @@
 
 namespace sysma
 {
-    struct Person
+    struct User
     {
         int id;
         std::string name;
         std::string phone;
         std::string email;
+        std::string password;
     };
 
     class Database
@@ -22,10 +23,11 @@ namespace sysma
         Database();
         ~Database();
 
-        void addPerson(std::string name, std::string phone, std::string email, int id = -1);
-        Person getPerson(int id);
-        void updatePerson(int id, std::string name, std::string phone, std::string email);
-        void removePerson(int id);
-        std::vector<Person> getPersons();
+        void addUser(std::string name, std::string phone,
+                     std::string email, std::string password, int id = -1);
+        void updateUser(int id, std::string name, std::string phone,
+                        std::string email, std::string password);
+        void removeUser(int id);
+        User login(std::string email, std::string password);
     };
 }
