@@ -1,0 +1,3 @@
+cd ./bin/
+
+.\test.exe
