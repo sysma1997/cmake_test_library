@@ -15,6 +15,9 @@ private:
     static char password[60];
     static char passwordRepeat[60];
 
+    static char modalTitle[60];
+    static char modalMessage[200];
+
 public:
     static bool show;
     static glm::vec2 size;

@@ -2,7 +2,7 @@
 
 #include "./database.h"
 
-namespace sysma
+/* namespace sysma
 {
     Database storage;
-}
+} */

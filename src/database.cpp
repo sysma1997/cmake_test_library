@@ -2,7 +2,6 @@
 
 #include <iostream>
 #include <string>
-#include <vector>
 
 namespace sysma
 {
@@ -11,24 +10,21 @@ namespace sysma
     Database::Database()
     {
         char *errMessage{0};
-        int success{sqlite3_open("database.db", &Database::db)};
+        int success{sqlite3_open("database.db", &db)};
         if (success)
-        {
-            std::cout << "Can't open database: " << sqlite3_errmsg(Database::db) << '\n';
-            return;
-        }
+            throw "Can't open database: " + std::string(sqlite3_errmsg(db)) + '\n';
 
         std::string query{
             "CREATE TABLE IF NOT EXISTS Users("
             "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
             "name TEXT NOT NULL, "
             "phone TEXT NOT NULL, "
-            "email TEXT NOT NULL, "
+            "email TEXT UNIQUE NOT NULL, "
             "password TEXT NOT NULL)"};
 
-        success = sqlite3_exec(Database::db, query.c_str(), NULL, 0, &errMessage);
+        success = sqlite3_exec(db, query.c_str(), NULL, 0, &errMessage);
         if (success != SQLITE_OK)
-            std::cout << errMessage << '\n';
+            throw std::string(errMessage) + '\n';
     }
     Database::~Database() {}
 
@@ -44,12 +40,9 @@ namespace sysma
             "VALUES (" +
             std::string((id != -1) ? "?, " : "") +
             "?, ?, ?, ?)"};
-        int success{sqlite3_prepare_v2(Database::db, query.c_str(), query.length(), &stmt, nullptr)};
+        int success{sqlite3_prepare_v2(db, query.c_str(), query.length(), &stmt, nullptr)};
         if (success != SQLITE_OK)
-        {
-            std::cout << "SQLITE Error: to insert User: " << sqlite3_errmsg(Database::db) << '\n';
-            return;
-        }
+            throw "SQLITE Error: to insert user: " + std::string(sqlite3_errmsg(db)) + '\n';
 
         int pos{1};
         if (id != -1)
@@ -59,7 +52,9 @@ namespace sysma
         sqlite3_bind_text(stmt, pos++, email.c_str(), email.length(), SQLITE_STATIC);
         sqlite3_bind_text(stmt, pos++, password.c_str(), password.length(), SQLITE_STATIC);
 
-        sqlite3_step(stmt);
+        success = sqlite3_step(stmt);
+        if (success != SQLITE_DONE)
+            throw "SQLITE Error: to insert user: " + std::string(sqlite3_errmsg(db)) + '\n';
         sqlite3_finalize(stmt);
     }
     void Database::updateUser(int id, std::string name, std::string phone,
@@ -71,12 +66,9 @@ namespace sysma
             "UPDATE Users SET name = ?, phone = ?, email = ?, password = ? "
             "WHERE id = ?"};
 
-        int success{sqlite3_prepare_v2(Database::db, query.c_str(), query.length(), &stmt, nullptr)};
+        int success{sqlite3_prepare_v2(db, query.c_str(), query.length(), &stmt, nullptr)};
         if (success != SQLITE_OK)
-        {
-            std::cout << "SQLITE Error: to update User: " << sqlite3_errmsg(Database::db) << '\n';
-            return;
-        }
+            throw "SQLITE Error: to update user: " + std::string(sqlite3_errmsg(db)) + '\n';
 
         sqlite3_bind_text(stmt, 1, name.c_str(), name.length(), SQLITE_STATIC);
         sqlite3_bind_text(stmt, 2, phone.c_str(), phone.length(), SQLITE_STATIC);
@@ -84,7 +76,27 @@ namespace sysma
         sqlite3_bind_text(stmt, 4, password.c_str(), password.length(), SQLITE_STATIC);
         sqlite3_bind_int(stmt, 5, id);
 
-        sqlite3_step(stmt);
+        success = sqlite3_step(stmt);
+        if (success != SQLITE_OK)
+            throw "SQLITE Error: to update user: " + std::string(sqlite3_errmsg(db)) + '\n';
+        sqlite3_finalize(stmt);
+    }
+    void Database::removeUser(int id)
+    {
+        sqlite3_stmt *stmt;
+
+        std::string query{
+            "DELETE FROM Users WHERE id = ?"};
+
+        int success{sqlite3_prepare_v2(db, query.c_str(), query.length(), &stmt, nullptr)};
+        if (success != SQLITE_OK)
+            throw "SQLITE Error: to remove user: " + std::string(sqlite3_errmsg(db)) + '\n';
+
+        sqlite3_bind_int(stmt, 1, id);
+
+        success = sqlite3_step(stmt);
+        if (success != SQLITE_OK)
+            throw "SQLITE Error: to remove user: " + std::string(sqlite3_errmsg(db)) + '\n';
         sqlite3_finalize(stmt);
     }
     User Database::login(std::string email, std::string password)
@@ -94,14 +106,15 @@ namespace sysma
         std::string query{
             "SELECT * FROM Users "
             "WHERE email = ? and password = ?"};
-        int success{sqlite3_prepare_v2(Database::db, query.c_str(), query.length(), &stmt, nullptr)};
+        int success{sqlite3_prepare_v2(db, query.c_str(), query.length(), &stmt, nullptr)};
         if (success != SQLITE_OK)
-        {
-            std::cout << "SQLITE Error: to get User: " << sqlite3_errmsg(Database::db) << '\n';
-            return User{};
-        }
+            throw "SQLITE Error: to get User: " + std::string(sqlite3_errmsg(db)) + '\n';
+
+        sqlite3_bind_text(stmt, 1, email.c_str(), email.length(), SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 2, password.c_str(), password.length(), SQLITE_STATIC);
 
         User user;
+        user.isNull = true;
         int row{0};
         while ((row = sqlite3_step(stmt)) == SQLITE_ROW)
         {
@@ -113,8 +126,9 @@ namespace sysma
                 user.phone = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2));
             if (sqlite3_column_type(stmt, 3) != SQLITE_NULL)
                 user.email = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 3));
-            if (sqlite3_column_type(stmt, 3) != SQLITE_NULL)
-                user.password = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 3));
+            if (sqlite3_column_type(stmt, 4) != SQLITE_NULL)
+                user.password = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 4));
+            user.isNull = false;
         }
 
         sqlite3_finalize(stmt);

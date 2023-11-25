@@ -1,5 +1,5 @@
 #include "sysma.h"
 
-namespace sysma
+/* namespace sysma
 {
-}
+} */

@@ -47,8 +47,11 @@ void Window::init(const char *title)
 
     glEnable(GL_DEPTH_TEST);
 }
-bool Window::isClose()
+bool Window::isClose(bool exit)
 {
+    if (exit)
+        glfwSetWindowShouldClose(window, true);
+
     return glfwWindowShouldClose(window) == 0;
 }
 void Window::newFrame(glm::vec4 background)

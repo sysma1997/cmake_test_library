@@ -17,7 +17,7 @@ public:
     ~Window();
 
     void init(const char *title);
-    bool isClose();
+    bool isClose(bool exit = false);
     void newFrame(glm::vec4 background = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
     void renderFrame();
     void terminate();

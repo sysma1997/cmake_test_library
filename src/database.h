@@ -2,7 +2,6 @@
 
 #include <string>
 #include <sqlite3.h>
-#include <vector>
 
 namespace sysma
 {
@@ -13,6 +12,8 @@ namespace sysma
         std::string phone;
         std::string email;
         std::string password;
+
+        bool isNull;
     };
 
     class Database

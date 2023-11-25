@@ -24,6 +24,8 @@ void Login::Init(Window window, sysma::Database *storage)
                      ImGuiInputTextFlags_Password);
 
     ImGui::NewLine();
+    ImGui::Separator();
+    ImGui::NewLine();
     if (ImGui::Button("Login"))
     {
         sysma::User user{storage->login(email, password)};
@@ -31,7 +33,8 @@ void Login::Init(Window window, sysma::Database *storage)
                   << "name: " << user.name << '\n'
                   << "phone: " << user.phone << '\n'
                   << "email: " << user.email << '\n'
-                  << "password: " << user.password << '\n';
+                  << "password: " << user.password << '\n'
+                  << "is null: " << user.isNull << '\n';
     }
     ImGui::SameLine();
     if (ImGui::Button("Register"))
