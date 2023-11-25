@@ -13,19 +13,16 @@ char Register::modalTitle[60]{""};
 char Register::modalMessage[200]{""};
 
 bool Register::show{false};
-glm::vec2 Register::size{200.0f, 200.0f};
+glm::vec2 Register::size{200.0f, 0.0f};
 
-void Register::Init(Window window, sysma::Database *storage)
+void Register::Init(Window window, sysma::Storage *storage)
 {
-    glm::vec2 centerPos{
-        (window.width / 2) - (size.x / 2),
-        (window.height / 2) - (size.y / 2)};
-
-    ImGui::SetNextWindowPos(ImVec2(centerPos.x, centerPos.y));
+    ImVec2 center{window.width / 2.0f, window.height / 2.0f};
+    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     ImGui::SetNextWindowSize(ImVec2(size.x, size.y));
     ImGui::Begin("Register", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
     ImGui::Text("Name:");
-    ImGui::PushItemWidth(size.x * 0.8f);
+    ImGui::PushItemWidth(size.x * 0.9f);
     ImGui::InputText("##name", name, IM_ARRAYSIZE(name));
     ImGui::Text("Phone:");
     ImGui::InputText("##phone", phone, IM_ARRAYSIZE(phone));
@@ -89,9 +86,9 @@ void Register::Init(Window window, sysma::Database *storage)
         {
             try
             {
-                storage->addUser(name, phone, email, password);
+                storage->user.add(name, phone, email, password);
 
-                strcpy(modalTitle, "Register");
+                strcpy(modalTitle, "Info");
                 strcpy(modalMessage, "User register success.");
                 ImGui::OpenPopup(modalTitle);
             }
@@ -113,7 +110,6 @@ void Register::Init(Window window, sysma::Database *storage)
         Login::show = true;
     }
 
-    ImVec2 center{ImGui::GetMainViewport()->GetCenter()};
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
     if (ImGui::BeginPopupModal(modalTitle, NULL, ImGuiWindowFlags_AlwaysAutoResize))
     {
@@ -122,13 +118,13 @@ void Register::Init(Window window, sysma::Database *storage)
 
         if (ImGui::Button("Ok", ImVec2(100.0f, 0.0f)))
         {
-            ImGui::CloseCurrentPopup();
-
-            /* if (modalTitle == "Register")
+            if (strcmp(modalTitle, "Info") == 0)
             {
                 show = false;
                 Login::show = true;
-            } */
+            }
+
+            ImGui::CloseCurrentPopup();
         }
         ImGui::EndPopup();
     }

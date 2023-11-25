@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 
 #include "./libs/sysma/sysma.h"
@@ -8,7 +9,17 @@
 
 int main()
 {
-    sysma::Database storage{sysma::Database()};
+    sysma::Storage storage;
+    try
+    {
+        storage = sysma::Storage();
+    }
+    catch (std::string err)
+    {
+        std::cout << err << '\n';
+
+        return -1;
+    }
 
     Window window{800, 600};
     window.init("test");
@@ -25,7 +36,8 @@ int main()
         {
             if (ImGui::BeginMenu("Window"))
             {
-                if (ImGui::MenuItem(std::string("ImGui demo: " + std::string((showImGuiDemo) ? "hide" : "show")).c_str()))
+                std::string titleImGuiDemo{"ImGui demo: " + std::string((showImGuiDemo) ? "hide" : "show")};
+                if (ImGui::MenuItem(titleImGuiDemo.c_str()))
                     showImGuiDemo = !showImGuiDemo;
                 if (ImGui::MenuItem("Exit"))
                     window.isClose(true);

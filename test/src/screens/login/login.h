@@ -15,5 +15,5 @@ public:
     static bool show;
     static glm::vec2 size;
 
-    static void Init(Window window, sysma::Database *storage);
+    static void Init(Window window, sysma::Storage *storage);
 };

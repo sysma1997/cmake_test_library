@@ -3,7 +3,7 @@ cmake -DCMAKE_BUILD_TYPE=Debug ..
 ninja
 
 cd ..\test\libs\sysma\
-del *sysma* *database*
+del /S *
 
 cd ..\..\..\bin\
-copy * ..\test\libs\sysma\
+Xcopy * ..\test\libs\sysma\ /E /H /C /I

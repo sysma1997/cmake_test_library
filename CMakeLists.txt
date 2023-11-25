@@ -25,9 +25,12 @@ include_directories(${SQLite3_INCLUDE_DIRS})
 
 file(GLOB_RECURSE sysma_src 
     "src/*.cpp")
-file(GLOB_RECURSE headers_src 
+file(GLOB_RECURSE sysma_headers_src_h
     "src/*.h")
-file(COPY ${headers_src} DESTINATION ${BUILD_PATH}/)
+file(GLOB sysma_headers_src 
+    "src/*")
+file(COPY ${sysma_headers_src} DESTINATION ${BUILD_PATH}/ 
+    FILES_MATCHING PATTERN "*.h")
 
 include(GNUInstallDirs)
 add_library(sysma SHARED ${sysma_main} ${sysma_src})
@@ -37,7 +40,9 @@ set_target_properties(sysma PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}
     PUBLIC_HEADER src/sysma.h
-    PUBLIC_HEADER src/database.h)
+    PUBLIC_HEADER src/storage.h
+    PUBLIC_HEADER src/storage/user.h)
+    #PUBLIC_HEADER "${sysma_headers_src_h}")
 configure_file(sysma.pc.in sysma.pc @ONLY)
 target_include_directories(sysma PRIVATE .)
 install(TARGETS sysma

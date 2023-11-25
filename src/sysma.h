@@ -1,6 +1,7 @@
 #pragma once
 
-#include "./database.h"
+#include "./storage.h"
+#include "./uuid.h"
 
 /* namespace sysma
 {
