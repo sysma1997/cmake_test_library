@@ -1,5 +1,7 @@
+.vscode/
 bin/
 build/
 test/bin/
 test/build/
 test/libs/sysma/
+test/.vscode/

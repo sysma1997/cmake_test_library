@@ -14,6 +14,8 @@ namespace sysma
         std::string password;
 
         bool isNull;
+
+        std::string toString();
     };
 
     class StorageUser
@@ -25,6 +27,7 @@ namespace sysma
         void add(User *user);
         void update(User user);
         void remove(std::string id);
+        User get(std::string id);
         User login(std::string email, std::string password);
     };
 }

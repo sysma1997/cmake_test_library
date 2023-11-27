@@ -16,6 +16,8 @@ namespace sysma
         int quantity;
 
         bool isNull;
+
+        std::string toString();
     };
 
     class StorageItem

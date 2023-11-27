@@ -1,5 +1,7 @@
 #include "./profile.h"
 
+#include <iostream>
+
 char Profile::name[100];
 char Profile::phone[30];
 char Profile::email[60];
@@ -42,22 +44,24 @@ void Profile::Init(Window window, sysma::Storage *storage)
     {
         if (isEdit)
         {
-            sysma::User user{Global::user};
-            user.name = name;
-            user.phone = phone;
-            user.email = email;
-            try
+            auto yes = [&]
             {
-                storage->user.update(user);
-                Global::user = user;
-                isEdit = !isEdit;
-
-                PopupAlert::Show("Update", "User update successfully");
-            }
-            catch (std::string err)
-            {
-                PopupAlert::Show("Warning", err);
-            }
+                sysma::User user{Global::user};
+                user.name = name;
+                user.phone = phone;
+                user.email = email;
+                try
+                {
+                    storage->user.update(user);
+                    Global::user = user;
+                    isEdit = !isEdit;
+                }
+                catch (std::string err)
+                {
+                    std::cout << err << '\n';
+                }
+            };
+            PopupConfirm::Show("Update", "Update this information?", yes);
         }
         else
         {
@@ -84,7 +88,24 @@ void Profile::Init(Window window, sysma::Storage *storage)
         ImGui::SameLine();
         if (ImGui::Button("Delete"))
         {
-            PopupConfirm::Show("Delete", "Delete me user?");
+            auto yes = [&]
+            {
+                try
+                {
+                    storage->user.remove(Global::user.id);
+                    Global::user = sysma::User{};
+                    Global::user.isNull = true;
+                    sysma::File::Remove("./cache/login.txt");
+
+                    show = false;
+                    Login::show = true;
+                }
+                catch (std::string err)
+                {
+                    std::cout << err << '\n';
+                }
+            };
+            PopupConfirm::Show("Delete", "Delete me user?", yes);
         }
     }
 

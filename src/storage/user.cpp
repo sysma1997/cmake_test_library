@@ -1,9 +1,24 @@
 #include "./user.h"
 
+#include <json/json.h>
+
 #include "../utils/uuid.h"
 
 namespace sysma
 {
+    std::string User::toString()
+    {
+        Json::Value json;
+        json["id"] = id;
+        json["name"] = name;
+        json["phone"] = phone;
+        json["email"] = email;
+        json["password"] = password;
+        json["isNull"] = isNull;
+
+        return Json::FastWriter().write(json);
+    }
+
     void StorageUser::init(sqlite3 *db)
     {
         this->db = db;
@@ -133,18 +148,55 @@ namespace sysma
         sqlite3_stmt *stmt;
 
         std::string query{
+            "DELETE FROM Items WHERE idUser = ?; "
             "DELETE FROM Users WHERE id = ?"};
 
         int success{sqlite3_prepare_v2(db, query.c_str(), query.length(), &stmt, nullptr)};
         if (success != SQLITE_OK)
             throw "SQLITE Error: to remove user: " + std::string(sqlite3_errmsg(db)) + '\n';
 
+        for (int i{0}; i < 2; i++)
+            sqlite3_bind_text(stmt, i + 1, id.c_str(), id.length(), SQLITE_STATIC);
+
+        while ((success = sqlite3_step(stmt)) == SQLITE_ROW)
+        {
+        }
+        if (success != SQLITE_DONE)
+            throw "SQLITE Error: to remove user: " + std::string(sqlite3_errmsg(db)) + '\n';
+
+        sqlite3_finalize(stmt);
+    }
+    User StorageUser::get(std::string id)
+    {
+        if (id.empty())
+            throw std::string("Id is required\n");
+
+        sqlite3_stmt *stmt;
+
+        std::string query{
+            "SELECT * FROM Users "
+            "WHERE id = ?"};
+        int success{sqlite3_prepare_v2(db, query.c_str(), query.length(), &stmt, nullptr)};
+        if (success != SQLITE_OK)
+            throw "SQLITE Error: to get user: " + std::string(sqlite3_errmsg(db)) + '\n';
+
         sqlite3_bind_text(stmt, 1, id.c_str(), id.length(), SQLITE_STATIC);
 
-        success = sqlite3_step(stmt);
-        if (success != SQLITE_OK)
-            throw "SQLITE Error: to remove user: " + std::string(sqlite3_errmsg(db)) + '\n';
+        User user;
+        user.isNull = true;
+        int row{0};
+        while ((row = sqlite3_step(stmt)) == SQLITE_ROW)
+        {
+            user.id = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
+            user.name = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
+            user.phone = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2));
+            user.email = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 3));
+            user.password = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 4));
+            user.isNull = false;
+        }
+
         sqlite3_finalize(stmt);
+        return user;
     }
     User StorageUser::login(std::string email, std::string password)
     {
@@ -158,7 +210,7 @@ namespace sysma
             "WHERE email = ? and password = ?"};
         int success{sqlite3_prepare_v2(db, query.c_str(), query.length(), &stmt, nullptr)};
         if (success != SQLITE_OK)
-            throw "SQLITE Error: to get User: " + std::string(sqlite3_errmsg(db)) + '\n';
+            throw "SQLITE Error: to get user: " + std::string(sqlite3_errmsg(db)) + '\n';
 
         sqlite3_bind_text(stmt, 1, email.c_str(), email.length(), SQLITE_STATIC);
         sqlite3_bind_text(stmt, 2, password.c_str(), password.length(), SQLITE_STATIC);

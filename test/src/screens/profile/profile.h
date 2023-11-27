@@ -3,6 +3,7 @@
 #include "../../../libs/sysma/sysma.h"
 #include "../../global.h"
 #include "../../window/window.h"
+#include "../login/login.h"
 
 class Profile
 {

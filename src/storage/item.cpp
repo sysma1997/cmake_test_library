@@ -1,11 +1,26 @@
 #include "./item.h"
 
 #include <optional>
+#include <json/json.h>
 
 #include "../utils/uuid.h"
 
 namespace sysma
 {
+    std::string Item::toString()
+    {
+        Json::Value json;
+        json["id"] = id;
+        json["idUser"] = idUser;
+        json["ref"] = ref;
+        json["name"] = name;
+        json["price"] = price;
+        json["quantity"] = quantity;
+        json["isNull"] = isNull;
+
+        return Json::FastWriter().write(json);
+    }
+
     void StorageItem::init(sqlite3 *db)
     {
         this->db = db;

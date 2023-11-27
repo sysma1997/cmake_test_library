@@ -21,6 +21,8 @@ set(sysma_main "src/sysma.cpp")
 
 # FRAMEWORKS
 find_package(SQLite3 REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(JSONCPP jsoncpp)
 include_directories(${SQLite3_INCLUDE_DIRS})
 
 file(GLOB_RECURSE sysma_src "src/*.cpp")
@@ -33,7 +35,8 @@ file(COPY ${sysma_licences} DESTINATION ${BUILD_PATH}/)
 include(GNUInstallDirs)
 add_library(sysma SHARED ${sysma_main} ${sysma_src})
 target_link_libraries(sysma
-    ${SQLite3_LIBRARIES})
+    ${SQLite3_LIBRARIES}
+    ${JSONCPP_LIBRARIES})
 set_target_properties(sysma PROPERTIES
     VERSION ${PROJECT_VERSION}
     SOVERSION ${PROJECT_VERSION_MAJOR}

@@ -3,6 +3,11 @@
 #include <iomanip>
 #include <iostream>
 
+#include <vector>
+#include <fstream>
+#include <sys/types.h>
+#include <sys/stat.h>
+
 char Login::email[60]{""};
 char Login::password[60]{""};
 
@@ -55,6 +60,8 @@ void Login::Init(Window window, sysma::Storage *storage)
                 Global::user = storage->user.login(email, sysma::sha256(password));
                 if (!Global::user.isNull)
                 {
+                    sysma::File::Save("./cache/login.txt", Global::user.id);
+
                     show = false;
                     ClearForm();
                 }

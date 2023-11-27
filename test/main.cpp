@@ -25,6 +25,21 @@ int main()
         return -1;
     }
 
+    std::string cacheLogin{sysma::File::Read("./cache/login.txt")};
+    if (!cacheLogin.empty())
+    {
+        try
+        {
+            Global::user = storage.user.get(cacheLogin);
+            if (!Global::user.isNull)
+                Login::show = false;
+        }
+        catch (std::string err)
+        {
+            std::cout << err << '\n';
+        }
+    }
+
     Window window{800, 600};
     window.init("test");
     UI ui{window.window};
@@ -64,6 +79,7 @@ int main()
                     {
                         Global::user = sysma::User{};
                         Global::user.isNull = true;
+                        sysma::File::Remove("./cache/login.txt");
 
                         Login::show = true;
                     }

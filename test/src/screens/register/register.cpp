@@ -99,6 +99,7 @@ void Register::Init(Window window, sysma::Storage *storage)
                 user.password = sysma::sha256(password);
                 storage->user.add(&user);
                 Global::user = user;
+                sysma::File::Save("./cache/login.txt", user.id);
 
                 std::function<void()> ok = []()
                 {
