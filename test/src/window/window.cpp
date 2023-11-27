@@ -54,11 +54,11 @@ bool Window::isClose(bool exit)
 
     return glfwWindowShouldClose(window) == 0;
 }
-void Window::newFrame(glm::vec4 background)
+void Window::newFrame(glm::vec3 background)
 {
     glfwGetFramebufferSize(window, &width, &height);
     glViewport(0, 0, width, height);
-    glClearColor(background.x, background.y, background.z, background.w);
+    glClearColor(background.x, background.y, background.z, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 void Window::renderFrame()

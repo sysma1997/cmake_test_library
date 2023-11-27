@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <string>
+#include <functional>
 
 char Register::name[100]{""};
 char Register::phone[30]{""};
@@ -9,20 +10,25 @@ char Register::email[60]{""};
 char Register::password[60]{""};
 char Register::passwordRepeat[60]{""};
 
-char Register::modalTitle[60]{""};
-char Register::modalMessage[200]{""};
-
 bool Register::show{false};
-glm::vec2 Register::size{200.0f, 0.0f};
+
+void Register::ClearForm()
+{
+    strcpy(name, "");
+    strcpy(phone, "");
+    strcpy(email, "");
+    strcpy(password, "");
+    strcpy(passwordRepeat, "");
+}
 
 void Register::Init(Window window, sysma::Storage *storage)
 {
     ImVec2 center{window.width / 2.0f, window.height / 2.0f};
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    ImGui::SetNextWindowSize(ImVec2(size.x, size.y));
+    ImGui::SetNextWindowSize(ImVec2(200.0f, 0.0f));
     ImGui::Begin("Register", nullptr, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
     ImGui::Text("Name:");
-    ImGui::PushItemWidth(size.x * 0.9f);
+    ImGui::PushItemWidth(200.0f * 0.9f);
     ImGui::InputText("##name", name, IM_ARRAYSIZE(name));
     ImGui::Text("Phone:");
     ImGui::InputText("##phone", phone, IM_ARRAYSIZE(phone));
@@ -54,52 +60,62 @@ void Register::Init(Window window, sysma::Storage *storage)
             isValid = false;
 
             std::string message{""};
+            int newLine{0};
             if (_name.empty())
+            {
                 message.append("Name is required");
+                newLine++;
+            }
             if (_phone.empty())
-                message.append(std::string((_name.empty()) ? "\n" : "") +
+                message.append(std::string((newLine++ > 0) ? "\n" : "") +
                                "Phone is required");
             if (_email.empty())
-                message.append(std::string((_name.empty() || _phone.empty()) ? "\n" : "") +
+                message.append(std::string((newLine++ > 0) ? "\n" : "") +
                                "Email is required");
             if (_password.empty())
-                message.append(std::string((_name.empty() || _phone.empty() || _email.empty()) ? "\n" : "") +
+                message.append(std::string((newLine++ > 0) ? "\n" : "") +
                                "Password is required");
             if (_passwordRepeat.empty())
-                message.append(std::string((_name.empty() || _phone.empty() || _email.empty() || _password.empty()) ? "\n" : "") +
+                message.append(std::string((newLine > 0) ? "\n" : "") +
                                "Repeat password is required");
 
-            strcpy(modalTitle, "Invalid dates");
-            strcpy(modalMessage, message.c_str());
-            ImGui::OpenPopup(modalTitle);
+            PopupAlert::Show("Invalid dates", message);
         }
         if (_password != _passwordRepeat)
         {
             isValid = false;
 
-            strcpy(modalTitle, "Invalid dates");
-            strcpy(modalMessage, "Password and repeat password are not equal.");
-            ImGui::OpenPopup(modalTitle);
+            PopupAlert::Show("Invalid dates", "Password and repeat password are not equal.");
         }
 
         if (isValid)
         {
             try
             {
-                storage->user.add(name, phone, email, password);
+                sysma::User user;
+                user.name = name;
+                user.phone = phone;
+                user.email = email;
+                user.password = sysma::sha256(password);
+                storage->user.add(&user);
+                Global::user = user;
 
-                strcpy(modalTitle, "Info");
-                strcpy(modalMessage, "User register success.");
-                ImGui::OpenPopup(modalTitle);
+                std::function<void()> ok = []()
+                {
+                    ClearForm();
+                    show = false;
+                };
+                PopupAlert::Show("Info", "User register success.", ok);
             }
             catch (std::string err)
             {
-                strcpy(modalTitle, "Invalid dates");
+                std::string message{""};
                 if (err.find("Users.email", 0) != std::string::npos)
-                    strcpy(modalMessage, "User already register");
+                    message = "Email already register";
                 else
-                    strcpy(modalMessage, err.c_str());
-                ImGui::OpenPopup(modalTitle);
+                    message = err;
+
+                PopupAlert::Show("Invalid dates", message);
             }
         }
     }
@@ -110,24 +126,6 @@ void Register::Init(Window window, sysma::Storage *storage)
         Login::show = true;
     }
 
-    ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
-    if (ImGui::BeginPopupModal(modalTitle, NULL, ImGuiWindowFlags_AlwaysAutoResize))
-    {
-        ImGui::Text(modalMessage);
-        ImGui::Separator();
-
-        if (ImGui::Button("Ok", ImVec2(100.0f, 0.0f)))
-        {
-            if (strcmp(modalTitle, "Info") == 0)
-            {
-                show = false;
-                Login::show = true;
-            }
-
-            ImGui::CloseCurrentPopup();
-        }
-        ImGui::EndPopup();
-    }
-
+    PopupAlert::Desing();
     ImGui::End();
 }

@@ -4,6 +4,7 @@
 #include <sqlite3.h>
 
 #include "./storage/user.h"
+#include "./storage/item.h"
 
 namespace sysma
 {
@@ -13,6 +14,7 @@ namespace sysma
 
     public:
         StorageUser user;
+        StorageItem item;
 
         Storage();
         ~Storage();

@@ -1,7 +1,8 @@
 #pragma once
 
 #include "./storage.h"
-#include "./uuid.h"
+#include "./utils/uuid.h"
+#include "./utils/sha256.h"
 
 /* namespace sysma
 {

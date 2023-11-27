@@ -1,6 +1,6 @@
 #include "./user.h"
 
-#include "../uuid.h"
+#include "../utils/uuid.h"
 
 namespace sysma
 {
@@ -16,14 +16,41 @@ namespace sysma
             "email TEXT UNIQUE NOT NULL, "
             "password TEXT NOT NULL)"};
 
-        char *errMessage;
-        int success{sqlite3_exec(db, query.c_str(), NULL, 0, &errMessage)};
+        char *errMsg;
+        int success{sqlite3_exec(db, query.c_str(), NULL, 0, &errMsg)};
         if (success != SQLITE_OK)
-            throw std::string(errMessage) + '\n';
+            throw std::string(errMsg) + '\n';
     }
-    void StorageUser::add(std::string name, std::string phone,
-                          std::string email, std::string password)
+    void StorageUser::add(User *user)
     {
+        if (user->name.empty() ||
+            user->phone.empty() ||
+            user->email.empty() ||
+            user->password.empty())
+        {
+            std::string message{""};
+
+            int newLine{0};
+            if (user->name.empty())
+            {
+                message.append("Name is required");
+                newLine++;
+            }
+            if (user->phone.empty())
+                message.append(std::string((newLine++ > 0) ? "\n" : "") +
+                               "Phone is required");
+            if (user->email.empty())
+                message.append(std::string((newLine++ > 0) ? "\n" : "") +
+                               "Email is required");
+            if (user->password.empty())
+                message.append(std::string((newLine > 0) ? "\n" : "") +
+                               "Password is required");
+
+            throw message + '\n';
+        }
+        if (user->password.length() != 64)
+            throw std::string("Password is not sha256 or not valid\n");
+
         sqlite3_stmt *stmt;
 
         std::string query{
@@ -33,21 +60,53 @@ namespace sysma
             throw "SQLITE Error: to insert user: " + std::string(sqlite3_errmsg(db)) + '\n';
 
         int pos{1};
-        std::string id{uuid::generate_uuid_v4()};
-        sqlite3_bind_text(stmt, pos++, id.c_str(), id.length(), SQLITE_STATIC);
-        sqlite3_bind_text(stmt, pos++, name.c_str(), name.length(), SQLITE_STATIC);
-        sqlite3_bind_text(stmt, pos++, phone.c_str(), phone.length(), SQLITE_STATIC);
-        sqlite3_bind_text(stmt, pos++, email.c_str(), email.length(), SQLITE_STATIC);
-        sqlite3_bind_text(stmt, pos++, password.c_str(), password.length(), SQLITE_STATIC);
+        if (user->id.empty())
+            user->id = uuid::generate_uuid_v4();
+        sqlite3_bind_text(stmt, pos++, user->id.c_str(), user->id.length(), SQLITE_STATIC);
+        sqlite3_bind_text(stmt, pos++, user->name.c_str(), user->name.length(), SQLITE_STATIC);
+        sqlite3_bind_text(stmt, pos++, user->phone.c_str(), user->phone.length(), SQLITE_STATIC);
+        sqlite3_bind_text(stmt, pos++, user->email.c_str(), user->email.length(), SQLITE_STATIC);
+        sqlite3_bind_text(stmt, pos++, user->password.c_str(), user->password.length(), SQLITE_STATIC);
 
         success = sqlite3_step(stmt);
         if (success != SQLITE_DONE)
             throw "SQLITE Error: to insert user: " + std::string(sqlite3_errmsg(db)) + '\n';
         sqlite3_finalize(stmt);
     }
-    void StorageUser::update(std::string id, std::string name, std::string phone,
-                             std::string email, std::string password)
+    void StorageUser::update(User user)
     {
+        if (user.id.empty() ||
+            user.name.empty() ||
+            user.phone.empty() ||
+            user.email.empty() ||
+            user.password.empty())
+        {
+            std::string message{""};
+
+            int newLine{0};
+            if (user.id.empty())
+            {
+                message.append("Id is required");
+                newLine++;
+            }
+            if (user.name.empty())
+                message.append(std::string((newLine++ > 0) ? "\n" : "") +
+                               "Name is required");
+            if (user.phone.empty())
+                message.append(std::string((newLine++ > 0) ? "\n" : "") +
+                               "Phone is required");
+            if (user.email.empty())
+                message.append(std::string((newLine++ > 0) ? "\n" : "") +
+                               "Email is required");
+            if (user.password.empty())
+                message.append(std::string((newLine > 0) ? "\n" : "") +
+                               "Password is required");
+
+            throw message + '\n';
+        }
+        if (user.password.length() != 64)
+            throw std::string("Password is not sha256 or not valid\n");
+
         sqlite3_stmt *stmt;
 
         std::string query{
@@ -58,14 +117,14 @@ namespace sysma
         if (success != SQLITE_OK)
             throw "SQLITE Error: to update user: " + std::string(sqlite3_errmsg(db)) + '\n';
 
-        sqlite3_bind_text(stmt, 1, name.c_str(), name.length(), SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 2, phone.c_str(), phone.length(), SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 3, email.c_str(), email.length(), SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 4, password.c_str(), password.length(), SQLITE_STATIC);
-        sqlite3_bind_text(stmt, 5, id.c_str(), id.length(), SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 1, user.name.c_str(), user.name.length(), SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 2, user.phone.c_str(), user.phone.length(), SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 3, user.email.c_str(), user.email.length(), SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 4, user.password.c_str(), user.password.length(), SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 5, user.id.c_str(), user.id.length(), SQLITE_STATIC);
 
         success = sqlite3_step(stmt);
-        if (success != SQLITE_OK)
+        if (success != SQLITE_DONE)
             throw "SQLITE Error: to update user: " + std::string(sqlite3_errmsg(db)) + '\n';
         sqlite3_finalize(stmt);
     }
@@ -89,6 +148,9 @@ namespace sysma
     }
     User StorageUser::login(std::string email, std::string password)
     {
+        if (password.length() != 64)
+            throw std::string("Password is not sha256 or not valid\n");
+
         sqlite3_stmt *stmt;
 
         std::string query{
@@ -107,15 +169,10 @@ namespace sysma
         while ((row = sqlite3_step(stmt)) == SQLITE_ROW)
         {
             user.id = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
-
-            if (sqlite3_column_type(stmt, 1) != SQLITE_NULL)
-                user.name = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
-            if (sqlite3_column_type(stmt, 2) != SQLITE_NULL)
-                user.phone = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2));
-            if (sqlite3_column_type(stmt, 3) != SQLITE_NULL)
-                user.email = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 3));
-            if (sqlite3_column_type(stmt, 4) != SQLITE_NULL)
-                user.password = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 4));
+            user.name = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
+            user.phone = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2));
+            user.email = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 3));
+            user.password = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 4));
             user.isNull = false;
         }
 

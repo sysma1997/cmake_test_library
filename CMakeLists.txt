@@ -23,14 +23,12 @@ set(sysma_main "src/sysma.cpp")
 find_package(SQLite3 REQUIRED)
 include_directories(${SQLite3_INCLUDE_DIRS})
 
-file(GLOB_RECURSE sysma_src 
-    "src/*.cpp")
-file(GLOB_RECURSE sysma_headers_src_h
-    "src/*.h")
-file(GLOB sysma_headers_src 
-    "src/*")
-file(COPY ${sysma_headers_src} DESTINATION ${BUILD_PATH}/ 
-    FILES_MATCHING PATTERN "*.h")
+file(GLOB_RECURSE sysma_src "src/*.cpp")
+file(GLOB_RECURSE sysma_headers_src_h "src/*.h")
+file(GLOB sysma_headers_src "src/*")
+file(COPY ${sysma_headers_src} DESTINATION ${BUILD_PATH}/ FILES_MATCHING PATTERN "*.h")
+file(GLOB sysma_licences "LICENSE.txt")
+file(COPY ${sysma_licences} DESTINATION ${BUILD_PATH}/)
 
 include(GNUInstallDirs)
 add_library(sysma SHARED ${sysma_main} ${sysma_src})

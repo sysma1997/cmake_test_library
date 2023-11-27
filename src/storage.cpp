@@ -13,7 +13,13 @@ namespace sysma
         if (success)
             throw "Can't open storage: " + std::string(sqlite3_errmsg(db)) + '\n';
 
+        char *errMessage;
+        success = sqlite3_exec(db, "PRAGMA foreign_keys = ON", NULL, 0, &errMessage);
+        if (success != SQLITE_OK)
+            throw std::string(errMessage) + '\n';
+
         user.init(db);
+        item.init(db);
     }
     Storage::~Storage() {}
 

@@ -9,7 +9,7 @@ UI::UI(GLFWwindow *window)
     io = GetIO();
     (void)io;
 
-    StyleColorsDark();
+    StyleColorsClassic();
 
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init();
@@ -20,6 +20,18 @@ void UI::newFrame()
 {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
+
+    ImGuiStyle *style{&ImGui::GetStyle()};
+
+    /* WINDOW */
+    style->WindowRounding = 5.0f;
+    style->WindowPadding = ImVec2(8.0f, 10.0f);
+    style->WindowTitleAlign = ImVec2(0.5f, 0.5f);
+
+    /* FRAME */
+    style->FrameRounding = 2.0f;
+    style->FramePadding = ImVec2(6.0f, 6.0f);
+
     NewFrame();
 }
 void UI::renderFrame()

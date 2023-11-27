@@ -18,7 +18,7 @@ public:
 
     void init(const char *title);
     bool isClose(bool exit = false);
-    void newFrame(glm::vec4 background = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f));
+    void newFrame(glm::vec3 background = glm::vec3(0.0f, 0.0f, 0.0f));
     void renderFrame();
     void terminate();
 

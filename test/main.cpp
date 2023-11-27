@@ -2,13 +2,17 @@
 #include <string>
 
 #include "./libs/sysma/sysma.h"
-#include "./src/window/window.h"
 
+#include "./src/global.h"
+#include "./src/window/window.h"
 #include "./src/screens/login/login.h"
 #include "./src/screens/register/register.h"
+#include "./src/screens/profile/profile.h"
 
 int main()
 {
+    Global::user.isNull = true;
+
     sysma::Storage storage;
     try
     {
@@ -29,7 +33,7 @@ int main()
 
     while (window.isClose())
     {
-        window.newFrame();
+        window.newFrame(glm::vec3{0.1f, 0.1f, 0.1f});
         ui.newFrame();
 
         if (ImGui::BeginMainMenuBar())
@@ -44,6 +48,29 @@ int main()
 
                 ImGui::EndMenu();
             }
+            if (!Global::user.isNull)
+            {
+                if (ImGui::BeginMenu(Global::user.name.c_str()))
+                {
+                    if (ImGui::MenuItem("Profile"))
+                    {
+                        Profile::show = true;
+                    }
+                    if (ImGui::MenuItem("Items"))
+                    {
+                        //
+                    }
+                    if (ImGui::MenuItem("Logout"))
+                    {
+                        Global::user = sysma::User{};
+                        Global::user.isNull = true;
+
+                        Login::show = true;
+                    }
+
+                    ImGui::EndMenu();
+                }
+            }
             ImGui::EndMainMenuBar();
         }
 
@@ -53,6 +80,8 @@ int main()
             Login::Init(window, &storage);
         if (Register::show)
             Register::Init(window, &storage);
+        if (Profile::show)
+            Profile::Init(window, &storage);
 
         ui.renderFrame();
         window.renderFrame();

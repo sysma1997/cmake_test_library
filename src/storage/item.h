@@ -2,29 +2,31 @@
 
 #include <string>
 #include <sqlite3.h>
+#include <vector>
 
 namespace sysma
 {
-    struct User
+    struct Item
     {
         std::string id;
+        std::string idUser;
+        std::string ref;
         std::string name;
-        std::string phone;
-        std::string email;
-        std::string password;
+        double price;
+        int quantity;
 
         bool isNull;
     };
 
-    class StorageUser
+    class StorageItem
     {
         sqlite3 *db;
 
     public:
         void init(sqlite3 *db);
-        void add(User *user);
-        void update(User user);
+        void add(Item *item);
+        void update(Item item);
         void remove(std::string id);
-        User login(std::string email, std::string password);
+        std::vector<Item> getItems(std::string idUser);
     };
 }
