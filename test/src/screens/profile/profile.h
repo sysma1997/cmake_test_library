@@ -11,6 +11,11 @@ class Profile
     static char phone[30];
     static char email[60];
 
+    static char modalPassword[60];
+    static char modalPasswordRepeat[60];
+    static char modalMessage[200];
+    static ImVec4 modalMessageColor;
+
     static bool isEdit;
 
 public:

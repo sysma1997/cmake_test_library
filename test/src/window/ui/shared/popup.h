@@ -8,9 +8,8 @@
 class Popup
 {
     static char title[60];
-    static char message[200];
 
 public:
-    static void Show(std::string title, std::string message);
+    static void Show(std::string title);
     static void Desing(std::function<void()> content);
 };

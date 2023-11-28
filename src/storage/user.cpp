@@ -145,26 +145,14 @@ namespace sysma
     }
     void StorageUser::remove(std::string id)
     {
-        sqlite3_stmt *stmt;
-
         std::string query{
-            "DELETE FROM Items WHERE idUser = ?; "
-            "DELETE FROM Users WHERE id = ?"};
+            "DELETE FROM Items WHERE idUser = '" + id + "'; " +
+            "DELETE FROM Users WHERE id = '" + id + "';"};
 
-        int success{sqlite3_prepare_v2(db, query.c_str(), query.length(), &stmt, nullptr)};
+        char *errMsg;
+        int success{sqlite3_exec(db, query.c_str(), NULL, 0, &errMsg)};
         if (success != SQLITE_OK)
-            throw "SQLITE Error: to remove user: " + std::string(sqlite3_errmsg(db)) + '\n';
-
-        for (int i{0}; i < 2; i++)
-            sqlite3_bind_text(stmt, i + 1, id.c_str(), id.length(), SQLITE_STATIC);
-
-        while ((success = sqlite3_step(stmt)) == SQLITE_ROW)
-        {
-        }
-        if (success != SQLITE_DONE)
-            throw "SQLITE Error: to remove user: " + std::string(sqlite3_errmsg(db)) + '\n';
-
-        sqlite3_finalize(stmt);
+            throw std::string(errMsg) + '\n';
     }
     User StorageUser::get(std::string id)
     {

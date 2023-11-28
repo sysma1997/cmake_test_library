@@ -6,6 +6,11 @@ char Profile::name[100];
 char Profile::phone[30];
 char Profile::email[60];
 
+char Profile::modalPassword[60];
+char Profile::modalPasswordRepeat[60];
+char Profile::modalMessage[200];
+ImVec4 Profile::modalMessageColor;
+
 bool Profile::isEdit = false;
 
 bool Profile::show = false;
@@ -82,9 +87,7 @@ void Profile::Init(Window window, sysma::Storage *storage)
     {
         ImGui::SameLine();
         if (ImGui::Button("Update password"))
-        {
-            //
-        }
+            Popup::Show("Update password");
         ImGui::SameLine();
         if (ImGui::Button("Delete"))
         {
@@ -111,5 +114,89 @@ void Profile::Init(Window window, sysma::Storage *storage)
 
     PopupAlert::Desing();
     PopupConfirm::Desing();
+    auto content = [&]
+    {
+        auto clearForm = [&]
+        {
+            strcpy(modalPassword, "");
+            strcpy(modalPasswordRepeat, "");
+            strcpy(modalMessage, "");
+        };
+        ImGui::Text("New password:");
+        ImGui::InputText("##password", modalPassword, IM_ARRAYSIZE(modalPassword),
+                         ImGuiInputTextFlags_Password);
+        ImGui::Text("Repeat new password:");
+        ImGui::InputText("##passwordRepeat", modalPasswordRepeat, IM_ARRAYSIZE(modalPasswordRepeat),
+                         ImGuiInputTextFlags_Password);
+
+        if (modalMessage[0] != '\0')
+        {
+            ImGui::NewLine();
+            ImGui::TextColored(modalMessageColor, modalMessage);
+            ImGui::NewLine();
+        }
+
+        ImGui::Separator();
+        if (ImGui::Button("Update"))
+        {
+            bool isValid{true};
+            std::string _password{modalPassword};
+            std::string _passwordRepeat{modalPasswordRepeat};
+            if (_password.empty() ||
+                _passwordRepeat.empty())
+            {
+                std::string message{""};
+
+                int newLine{0};
+                if (_password.empty())
+                {
+                    message.append("Password is required");
+                    newLine++;
+                }
+                if (_passwordRepeat.empty())
+                    message.append(std::string((newLine > 0) ? "\n" : "") +
+                                   "Password repeat is required.");
+
+                modalMessageColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+                strcpy(modalMessage, message.c_str());
+                isValid = false;
+            }
+            if (_password != _passwordRepeat)
+            {
+                modalMessageColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+                strcpy(modalMessage, "new Password and repeat new password is not equals");
+                isValid = false;
+            }
+
+            if (isValid)
+            {
+                strcpy(modalMessage, "");
+
+                sysma::User user{Global::user};
+                user.password = sysma::sha256(modalPassword);
+                try
+                {
+                    storage->user.update(user);
+                    Global::user = user;
+
+                    clearForm();
+                    modalMessageColor = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+                    strcpy(modalMessage, "Update password successfully");
+                }
+                catch (std::string err)
+                {
+                    modalMessageColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+                    strcpy(modalMessage, err.c_str());
+                }
+            }
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Cancel"))
+        {
+            clearForm();
+            ImGui::CloseCurrentPopup();
+        }
+    };
+    Popup::Desing(content);
     ImGui::End();
 }
