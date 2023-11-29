@@ -8,6 +8,7 @@
 #include "./src/screens/login/login.h"
 #include "./src/screens/register/register.h"
 #include "./src/screens/profile/profile.h"
+#include "./src/screens/items/items.h"
 
 int main()
 {
@@ -40,7 +41,7 @@ int main()
         }
     }
 
-    Window window{800, 600};
+    Window window{1200, 700};
     window.init("test");
     UI ui{window.window};
 
@@ -68,13 +69,9 @@ int main()
                 if (ImGui::BeginMenu(Global::user.name.c_str()))
                 {
                     if (ImGui::MenuItem("Profile"))
-                    {
                         Profile::show = true;
-                    }
                     if (ImGui::MenuItem("Items"))
-                    {
-                        //
-                    }
+                        Items::show = true;
                     if (ImGui::MenuItem("Logout"))
                     {
                         Global::user = sysma::User{};
@@ -98,6 +95,8 @@ int main()
             Register::Init(window, &storage);
         if (Profile::show)
             Profile::Init(window, &storage);
+        if (Items::show)
+            Items::Init(window, &storage);
 
         ui.renderFrame();
         window.renderFrame();
