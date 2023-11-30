@@ -71,7 +71,10 @@ int main()
                     if (ImGui::MenuItem("Profile"))
                         Profile::show = true;
                     if (ImGui::MenuItem("Items"))
+                    {
                         Items::show = true;
+                        Items::getItems(&storage);
+                    }
                     if (ImGui::MenuItem("Logout"))
                     {
                         Global::user = sysma::User{};

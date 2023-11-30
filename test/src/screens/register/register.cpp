@@ -97,6 +97,7 @@ void Register::Init(Window window, sysma::Storage *storage)
                 user.phone = phone;
                 user.email = email;
                 user.password = sysma::sha256(password);
+                user.isNull = false;
                 storage->user.add(&user);
                 Global::user = user;
                 sysma::File::Save("./cache/login.txt", user.id);
