@@ -36,35 +36,43 @@ namespace sysma
         if (success != SQLITE_OK)
             throw std::string(errMsg) + '\n';
     }
-    void StorageUser::add(User *user)
+    Throw StorageUser::validate(User user)
     {
-        if (user->name.empty() ||
-            user->phone.empty() ||
-            user->email.empty() ||
-            user->password.empty())
+        if (user.name.empty() ||
+            user.phone.empty() ||
+            user.email.empty() ||
+            user.password.empty())
         {
             std::string message{""};
 
             int newLine{0};
-            if (user->name.empty())
+            if (user.name.empty())
             {
                 message.append("Name is required");
                 newLine++;
             }
-            if (user->phone.empty())
+            if (user.phone.empty())
                 message.append(std::string((newLine++ > 0) ? "\n" : "") +
                                "Phone is required");
-            if (user->email.empty())
+            if (user.email.empty())
                 message.append(std::string((newLine++ > 0) ? "\n" : "") +
                                "Email is required");
-            if (user->password.empty())
+            if (user.password.empty())
                 message.append(std::string((newLine > 0) ? "\n" : "") +
                                "Password is required");
 
-            throw message + '\n';
+            return Throw{false, message + '\n'};
         }
-        if (user->password.length() != 64)
-            throw std::string("Password is not sha256 or not valid\n");
+        if (user.password.length() != 64)
+            return Throw{false, std::string("Password is not sha256 or not valid\n")};
+
+        return Throw{true, ""};
+    }
+    void StorageUser::add(User *user)
+    {
+        Throw isValid{validate(*user)};
+        if (!isValid.valid)
+            throw isValid.message;
 
         sqlite3_stmt *stmt;
 
@@ -90,37 +98,11 @@ namespace sysma
     }
     void StorageUser::update(User user)
     {
-        if (user.id.empty() ||
-            user.name.empty() ||
-            user.phone.empty() ||
-            user.email.empty() ||
-            user.password.empty())
-        {
-            std::string message{""};
-
-            int newLine{0};
-            if (user.id.empty())
-            {
-                message.append("Id is required");
-                newLine++;
-            }
-            if (user.name.empty())
-                message.append(std::string((newLine++ > 0) ? "\n" : "") +
-                               "Name is required");
-            if (user.phone.empty())
-                message.append(std::string((newLine++ > 0) ? "\n" : "") +
-                               "Phone is required");
-            if (user.email.empty())
-                message.append(std::string((newLine++ > 0) ? "\n" : "") +
-                               "Email is required");
-            if (user.password.empty())
-                message.append(std::string((newLine > 0) ? "\n" : "") +
-                               "Password is required");
-
-            throw message + '\n';
-        }
-        if (user.password.length() != 64)
-            throw std::string("Password is not sha256 or not valid\n");
+        if (user.id.empty())
+            throw std::string("Id is required");
+        Throw isValid{validate(user)};
+        if (!isValid.valid)
+            throw isValid.message;
 
         sqlite3_stmt *stmt;
 
@@ -145,6 +127,9 @@ namespace sysma
     }
     void StorageUser::remove(std::string id)
     {
+        if (id.empty())
+            throw std::string("Id is required");
+
         std::string query{
             "DELETE FROM Items WHERE idUser = '" + id + "'; " +
             "DELETE FROM Users WHERE id = '" + id + "';"};
@@ -188,6 +173,22 @@ namespace sysma
     }
     User StorageUser::login(std::string email, std::string password)
     {
+        if (email.empty() || password.empty())
+        {
+            std::string message{""};
+
+            int newLine{0};
+            if (email.empty())
+            {
+                message.append("Email is required.");
+                newLine++;
+            }
+            if (password.empty())
+                message.append(std::string((newLine > 0) ? "\n" : "") +
+                               "Password is required");
+
+            throw message + '\n';
+        }
         if (password.length() != 64)
             throw std::string("Password is not sha256 or not valid\n");
 

@@ -3,6 +3,8 @@
 #include <string>
 #include <sqlite3.h>
 
+#include "../utils/throw.h"
+
 namespace sysma
 {
     struct User
@@ -21,6 +23,8 @@ namespace sysma
     class StorageUser
     {
         sqlite3 *db;
+
+        Throw validate(User user);
 
     public:
         void init(sqlite3 *db);

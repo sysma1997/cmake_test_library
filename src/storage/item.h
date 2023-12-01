@@ -4,6 +4,8 @@
 #include <sqlite3.h>
 #include <vector>
 
+#include "../utils/throw.h"
+
 namespace sysma
 {
     struct Item
@@ -23,6 +25,8 @@ namespace sysma
     class StorageItem
     {
         sqlite3 *db;
+
+        Throw validate(Item item);
 
     public:
         void init(sqlite3 *db);

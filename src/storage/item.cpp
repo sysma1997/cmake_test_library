@@ -40,28 +40,28 @@ namespace sysma
         if (success != SQLITE_OK)
             throw std::string(errMsg) + '\n';
     }
-    void StorageItem::add(Item *item)
+    Throw StorageItem::validate(Item item)
     {
-        std::optional<double> price{item->price};
-        std::optional<int> quantity{item->quantity};
-        if (item->idUser.empty() ||
-            item->ref.empty() ||
-            item->name.empty() ||
+        std::optional<double> price{item.price};
+        std::optional<int> quantity{item.quantity};
+        if (item.idUser.empty() ||
+            item.ref.empty() ||
+            item.name.empty() ||
             !price ||
             !quantity)
         {
             std::string message{""};
 
             int newLine{0};
-            if (item->idUser.empty())
+            if (item.idUser.empty())
             {
                 message.append("idUser is required");
                 newLine++;
             }
-            if (item->ref.empty())
+            if (item.ref.empty())
                 message.append(std::string((newLine++ > 0) ? "\n" : "") +
                                "Reference is required");
-            if (item->name.empty())
+            if (item.name.empty())
                 message.append(std::string((newLine++ > 0) ? "\n" : "") +
                                "Name is required");
             if (!price)
@@ -71,8 +71,32 @@ namespace sysma
                 message.append(std::string((newLine > 0) ? "\n" : "") +
                                "Quantity is required");
 
-            throw message + '\n';
+            return Throw{false, message + '\n'};
         }
+        if (price <= 0 || quantity < 0)
+        {
+            std::string message{""};
+
+            int newLine{0};
+            if (price <= 0)
+            {
+                message.append("The price has to be greater than 0");
+                newLine++;
+            }
+            if (quantity < 0)
+                message.append(std::string((newLine > 0) ? "\n" : "") +
+                               "The quantity cannot be a negative value");
+
+            return Throw{false, message + '\n'};
+        }
+
+        return Throw{true, ""};
+    }
+    void StorageItem::add(Item *item)
+    {
+        Throw isValid{validate(*item)};
+        if (!isValid.valid)
+            throw isValid.message;
 
         sqlite3_stmt *stmt;
         std::string query{
@@ -99,37 +123,11 @@ namespace sysma
     }
     void StorageItem::update(Item item)
     {
-        std::optional<double> price{item.price};
-        std::optional<int> quantity{item.quantity};
-        if (item.id.empty() ||
-            item.ref.empty() ||
-            item.name.empty() ||
-            !price ||
-            !quantity)
-        {
-            std::string message{""};
-
-            int newLine{0};
-            if (item.id.empty())
-            {
-                message.append("Id is required");
-                newLine++;
-            }
-            if (item.ref.empty())
-                message.append(std::string((newLine++ > 0) ? "\n" : "") +
-                               "Reference is required");
-            if (item.name.empty())
-                message.append(std::string((newLine++ > 0) ? "\n" : "") +
-                               "Name is required");
-            if (!price)
-                message.append(std::string((newLine++ > 0) ? "\n" : "") +
-                               "Price is required");
-            if (!quantity)
-                message.append(std::string((newLine > 0) ? "\n" : "") +
-                               "Quantity is required");
-
-            throw message + '\n';
-        }
+        if (item.id.empty())
+            throw std::string("Id is required");
+        Throw isValid{validate(item)};
+        if (!isValid.valid)
+            throw isValid.message;
 
         sqlite3_stmt *stmt;
         std::string query{
@@ -153,7 +151,7 @@ namespace sysma
     void StorageItem::remove(std::string id)
     {
         if (id.empty())
-            throw "Id is required\n";
+            throw std::string("Id is required\n");
 
         sqlite3_stmt *stmt;
         std::string query{
@@ -172,7 +170,7 @@ namespace sysma
     std::vector<Item> StorageItem::getItems(std::string idUser)
     {
         if (idUser.empty())
-            throw "IdUser is required\n";
+            throw std::string("IdUser is required\n");
 
         sqlite3_stmt *stmt;
         std::string query{
