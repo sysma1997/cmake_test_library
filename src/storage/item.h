@@ -34,5 +34,6 @@ namespace sysma
         void update(Item item);
         void remove(std::string id);
         std::vector<Item> getItems(std::string idUser);
+        Item getRef(std::string idUser, std::string ref);
     };
 }

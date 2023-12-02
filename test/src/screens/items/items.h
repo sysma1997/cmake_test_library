@@ -16,6 +16,8 @@ class Items
     static sysma::Item item;
     static std::vector<sysma::Item> items;
 
+    static sysma::Throw validateForm();
+    static void clearForm();
     static void add(sysma::Storage *storage);
     static void update(sysma::Storage *storage);
 

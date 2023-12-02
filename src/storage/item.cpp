@@ -98,6 +98,10 @@ namespace sysma
         if (!isValid.valid)
             throw isValid.message;
 
+        Item exists{getRef(item->idUser, item->ref)};
+        if (!exists.isNull)
+            throw std::string("Ref already exists\n");
+
         sqlite3_stmt *stmt;
         std::string query{
             "INSERT INTO Items(id, idUser, ref, name, price, quantity) "
@@ -174,8 +178,7 @@ namespace sysma
 
         sqlite3_stmt *stmt;
         std::string query{
-            "SELECT * FROM Items "
-            "WHERE idUser = ?"};
+            "SELECT * FROM Items WHERE idUser = ?"};
 
         int success{sqlite3_prepare_v2(db, query.c_str(), query.length(), &stmt, nullptr)};
         if (success != SQLITE_OK)
@@ -201,5 +204,52 @@ namespace sysma
 
         sqlite3_finalize(stmt);
         return items;
+    }
+    Item StorageItem::getRef(std::string idUser, std::string ref)
+    {
+        if (idUser.empty() ||
+            ref.empty())
+        {
+            std::string message{""};
+
+            int newLine{0};
+            if (idUser.empty())
+            {
+                message.append("IdUser is required");
+                newLine++;
+            }
+            if (ref.empty())
+                message.append(std::string((newLine > 0) ? "\n" : "") +
+                               "Ref is required");
+
+            throw message + '\n';
+        }
+
+        sqlite3_stmt *stmt;
+        std::string query{"SELECT * FROM Items WHERE idUser = ? and ref = ?"};
+
+        int success{sqlite3_prepare_v2(db, query.c_str(), query.length(), &stmt, nullptr)};
+        if (success != SQLITE_OK)
+            throw "SQLITE Error: to get item: " + std::string(sqlite3_errmsg(db)) + '\n';
+
+        sqlite3_bind_text(stmt, 1, idUser.c_str(), idUser.length(), SQLITE_STATIC);
+        sqlite3_bind_text(stmt, 2, ref.c_str(), ref.length(), SQLITE_STATIC);
+
+        Item item{};
+        item.isNull = true;
+        int row{0};
+        while ((row = sqlite3_step(stmt)) == SQLITE_ROW)
+        {
+            item.id = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 0));
+            item.idUser = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 1));
+            item.ref = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 2));
+            item.name = reinterpret_cast<const char *>(sqlite3_column_text(stmt, 3));
+            item.price = sqlite3_column_double(stmt, 4);
+            item.quantity = sqlite3_column_int(stmt, 5);
+            item.isNull = false;
+        }
+
+        sqlite3_finalize(stmt);
+        return item;
     }
 }

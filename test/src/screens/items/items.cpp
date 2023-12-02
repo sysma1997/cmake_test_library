@@ -12,9 +12,8 @@ int Items::quantity;
 sysma::Item Items::item;
 std::vector<sysma::Item> Items::items;
 
-void Items::add(sysma::Storage *storage)
+sysma::Throw Items::validateForm()
 {
-    bool isValid{true};
     std::string _ref{ref};
     std::string _name{name};
     std::optional<double> _price{price};
@@ -24,8 +23,6 @@ void Items::add(sysma::Storage *storage)
         !_price ||
         !_quantity)
     {
-        isValid = false;
-
         std::string message{""};
 
         int newLine{0};
@@ -45,10 +42,43 @@ void Items::add(sysma::Storage *storage)
             message.append(std::string((newLine > 0) ? "\n" : "") +
                            "Quantity is required");
 
-        PopupAlert::Show("Invalid dates", message);
+        return sysma::Throw{false, message + '\n'};
+    }
+    if (price <= 0 || quantity < 0)
+    {
+        std::string message{""};
+
+        int newLine{0};
+        if (price <= 0)
+        {
+            message.append("The price has to be greater than 0");
+            newLine++;
+        }
+        if (quantity < 0)
+            message.append(std::string((newLine > 0) ? "\n" : "") +
+                           "The quantity cannot be a negative value");
+
+        return sysma::Throw{false, message + '\n'};
     }
 
-    if (isValid)
+    return sysma::Throw{true, ""};
+}
+void Items::clearForm()
+{
+    item = sysma::Item{};
+    item.isNull = true;
+    strcpy(ref, "");
+    strcpy(name, "");
+    price = 0.0;
+    quantity = 0;
+}
+void Items::add(sysma::Storage *storage)
+{
+    sysma::Throw validate{validateForm()};
+    if (!validate.valid)
+        PopupAlert::Show("Invalid dates", validate.message);
+
+    if (validate.valid)
     {
         try
         {
@@ -73,7 +103,40 @@ void Items::add(sysma::Storage *storage)
 }
 void Items::update(sysma::Storage *storage)
 {
-    //
+    sysma::Throw validate{validateForm()};
+    if (!validate.valid)
+        PopupAlert::Show("Invalid dates", validate.message);
+
+    if (validate.valid)
+    {
+        try
+        {
+            sysma::Item updateItem;
+            updateItem.id = item.id;
+            updateItem.idUser = Global::user.id;
+            updateItem.ref = ref;
+            updateItem.name = name;
+            updateItem.price = price;
+            updateItem.quantity = quantity;
+            updateItem.isNull = false;
+            storage->item.update(updateItem);
+            item = updateItem;
+            for (int i{0}; i < items.size(); i++)
+            {
+                if (items[i].id != item.id)
+                    continue;
+
+                items[i] = item;
+                break;
+            }
+
+            PopupAlert::Show("Info", "Item update successfully");
+        }
+        catch (std::string err)
+        {
+            PopupAlert::Show("Warning", err);
+        }
+    }
 }
 
 bool Items::show{false};
@@ -107,16 +170,34 @@ void Items::Init(Window window, sysma::Storage *storage)
         ImGui::SameLine();
         if (ImGui::Button("Remove"))
         {
+            auto yes = [&]
+            {
+                try
+                {
+                    storage->item.remove(item.id);
+                    std::vector<sysma::Item> copy{items};
+                    for (int i{0}; i < copy.size(); i++)
+                    {
+                        if (copy[i].id == item.id)
+                        {
+                            items.erase(items.begin() + i);
+                            clearForm();
+                            break;
+                        }
+                    }
+                }
+                catch (std::string err)
+                {
+                    std::cout << err << '\n';
+                }
+            };
+            PopupConfirm::Show("Remove", "Remove item " + item.name + "?",
+                               yes);
         }
         ImGui::SameLine();
         if (ImGui::Button("Clear"))
         {
-            item = sysma::Item{};
-            item.isNull = true;
-            strcpy(ref, "");
-            strcpy(name, "");
-            price = 0.0;
-            quantity = 0;
+            clearForm();
         }
     }
     ImGui::EndGroup();
@@ -161,19 +242,6 @@ void Items::Init(Window window, sysma::Storage *storage)
                 ImGui::TableSetColumnIndex(3);
                 ImGui::Text(std::to_string(_item.quantity).c_str());
             }
-            /* for (int i{0}; i < 5; i++)
-            {
-                ImGui::TableNextRow();
-                for (int column{0}; column < 4; column++)
-                {
-                    ImGui::TableSetColumnIndex(column);
-                    std::string text{"item " + std::to_string(i + 1) + " " + std::to_string(column + 1)};
-                    if (ImGui::Selectable(text.c_str(), false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap))
-                    {
-                        std::cout << "Level\n";
-                    }
-                }
-            } */
 
             ImGui::EndTable();
         }
@@ -185,6 +253,7 @@ void Items::Init(Window window, sysma::Storage *storage)
     ImGui::EndGroup();
 
     PopupAlert::Desing();
+    PopupConfirm::Desing();
     ImGui::End();
 }
 void Items::getItems(sysma::Storage *storage)
