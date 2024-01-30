@@ -72,7 +72,7 @@ void Items::clearForm()
     price = 0.0;
     quantity = 0;
 }
-void Items::add(sysma::Storage *storage)
+void Items::add()
 {
     sysma::Throw validate{validateForm()};
     if (!validate.valid)
@@ -89,7 +89,7 @@ void Items::add(sysma::Storage *storage)
             newItem.price = price;
             newItem.quantity = quantity;
             newItem.isNull = false;
-            storage->item.add(&newItem);
+            Global::storage.item.add(&newItem);
             item = newItem;
             items.push_back(item);
 
@@ -101,7 +101,7 @@ void Items::add(sysma::Storage *storage)
         }
     }
 }
-void Items::update(sysma::Storage *storage)
+void Items::update()
 {
     sysma::Throw validate{validateForm()};
     if (!validate.valid)
@@ -119,7 +119,7 @@ void Items::update(sysma::Storage *storage)
             updateItem.price = price;
             updateItem.quantity = quantity;
             updateItem.isNull = false;
-            storage->item.update(updateItem);
+            Global::storage.item.update(updateItem);
             item = updateItem;
             for (int i{0}; i < items.size(); i++)
             {
@@ -141,7 +141,7 @@ void Items::update(sysma::Storage *storage)
 
 bool Items::show{false};
 
-void Items::Init(Window window, sysma::Storage *storage)
+void Items::Init(Window window)
 {
     ImVec2 size{window.width * 0.5f, 0.0f};
     ImGui::SetNextWindowSize(size);
@@ -161,9 +161,9 @@ void Items::Init(Window window, sysma::Storage *storage)
     if (ImGui::Button(((item.isNull) ? "Add" : "Update")))
     {
         if (item.isNull)
-            add(storage);
+            add();
         else
-            update(storage);
+            update();
     }
     if (!item.isNull)
     {
@@ -174,7 +174,7 @@ void Items::Init(Window window, sysma::Storage *storage)
             {
                 try
                 {
-                    storage->item.remove(item.id);
+                    Global::storage.item.remove(item.id);
                     std::vector<sysma::Item> copy{items};
                     for (int i{0}; i < copy.size(); i++)
                     {
@@ -256,8 +256,8 @@ void Items::Init(Window window, sysma::Storage *storage)
     PopupConfirm::Desing();
     ImGui::End();
 }
-void Items::getItems(sysma::Storage *storage)
+void Items::getItems()
 {
     item.isNull = true;
-    items = storage->item.getItems(Global::user.id);
+    items = Global::storage.item.getItems(Global::user.id);
 }

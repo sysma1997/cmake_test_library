@@ -19,7 +19,7 @@ void Login::ClearForm()
     strcpy(password, "");
 }
 
-void Login::Init(Window window, sysma::Storage *storage)
+void Login::Init(Window window)
 {
     ImVec2 center{window.width / 2.0f, window.height / 2.0f};
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
@@ -33,7 +33,8 @@ void Login::Init(Window window, sysma::Storage *storage)
                      ImGuiInputTextFlags_Password);
 
     ImGui::NewLine();
-    if (ImGui::Button("Login"))
+    if (ImGui::Button("Login") ||
+        ImGui::IsKeyPressed(ImGuiKey_Enter, false))
     {
         bool isValid{true};
         std::string _email{email};
@@ -57,7 +58,7 @@ void Login::Init(Window window, sysma::Storage *storage)
         {
             try
             {
-                Global::user = storage->user.login(email, sysma::sha256(password));
+                Global::user = Global::storage.user.login(email, sysma::sha256(password));
                 if (!Global::user.isNull)
                 {
                     sysma::File::Save("./cache/login.txt", Global::user.id);

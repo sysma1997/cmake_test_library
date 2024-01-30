@@ -18,12 +18,12 @@ class Items
 
     static sysma::Throw validateForm();
     static void clearForm();
-    static void add(sysma::Storage *storage);
-    static void update(sysma::Storage *storage);
+    static void add();
+    static void update();
 
 public:
     static bool show;
 
-    static void Init(Window window, sysma::Storage *storage);
-    static void getItems(sysma::Storage *storage);
+    static void Init(Window window);
+    static void getItems();
 };

@@ -15,7 +15,7 @@ bool Profile::isEdit = false;
 
 bool Profile::show = false;
 
-void Profile::Init(Window window, sysma::Storage *storage)
+void Profile::Init(Window window)
 {
     ImGui::Begin("Profile", &show);
     ImGui::Text(std::string("Id: " + Global::user.id).c_str());
@@ -57,7 +57,7 @@ void Profile::Init(Window window, sysma::Storage *storage)
                 user.email = email;
                 try
                 {
-                    storage->user.update(user);
+                    Global::storage.user.update(user);
                     Global::user = user;
                     isEdit = !isEdit;
                 }
@@ -95,7 +95,7 @@ void Profile::Init(Window window, sysma::Storage *storage)
             {
                 try
                 {
-                    storage->user.remove(Global::user.id);
+                    Global::storage.user.remove(Global::user.id);
                     Global::user = sysma::User{};
                     Global::user.isNull = true;
                     sysma::File::Remove("./cache/login.txt");
@@ -176,7 +176,7 @@ void Profile::Init(Window window, sysma::Storage *storage)
                 user.password = sysma::sha256(modalPassword);
                 try
                 {
-                    storage->user.update(user);
+                    Global::storage.user.update(user);
                     Global::user = user;
 
                     clearForm();

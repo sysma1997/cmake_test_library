@@ -13,11 +13,9 @@
 int main()
 {
     Global::user.isNull = true;
-
-    sysma::Storage storage;
     try
     {
-        storage = sysma::Storage();
+        Global::storage = sysma::Storage();
     }
     catch (std::string err)
     {
@@ -31,7 +29,7 @@ int main()
     {
         try
         {
-            Global::user = storage.user.get(cacheLogin);
+            Global::user = Global::storage.user.get(cacheLogin);
             if (!Global::user.isNull)
                 Login::show = false;
         }
@@ -73,7 +71,7 @@ int main()
                     if (ImGui::MenuItem("Items"))
                     {
                         Items::show = true;
-                        Items::getItems(&storage);
+                        Items::getItems();
                     }
                     if (ImGui::MenuItem("Logout"))
                     {
@@ -93,13 +91,13 @@ int main()
         if (showImGuiDemo)
             ImGui::ShowDemoWindow(&showImGuiDemo);
         if (Login::show)
-            Login::Init(window, &storage);
+            Login::Init(window);
         if (Register::show)
-            Register::Init(window, &storage);
+            Register::Init(window);
         if (Profile::show)
-            Profile::Init(window, &storage);
+            Profile::Init(window);
         if (Items::show)
-            Items::Init(window, &storage);
+            Items::Init(window);
 
         ui.renderFrame();
         window.renderFrame();

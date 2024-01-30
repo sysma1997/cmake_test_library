@@ -1,7 +1,7 @@
 cd ./build/
 
 cmake -DCMAKE_BUILD_TYPE=Debug ..
-ninja
+ninja -v
 
 cd ../bin/
 

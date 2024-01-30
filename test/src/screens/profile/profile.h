@@ -21,5 +21,5 @@ class Profile
 public:
     static bool show;
 
-    static void Init(Window window, sysma::Storage *storage);
+    static void Init(Window window);
 };

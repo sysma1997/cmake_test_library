@@ -21,7 +21,7 @@ void Register::ClearForm()
     strcpy(passwordRepeat, "");
 }
 
-void Register::Init(Window window, sysma::Storage *storage)
+void Register::Init(Window window)
 {
     ImVec2 center{window.width / 2.0f, window.height / 2.0f};
     ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
@@ -98,7 +98,7 @@ void Register::Init(Window window, sysma::Storage *storage)
                 user.email = email;
                 user.password = sysma::sha256(password);
                 user.isNull = false;
-                storage->user.add(&user);
+                Global::storage.user.add(&user);
                 Global::user = user;
                 sysma::File::Save("./cache/login.txt", user.id);
 
